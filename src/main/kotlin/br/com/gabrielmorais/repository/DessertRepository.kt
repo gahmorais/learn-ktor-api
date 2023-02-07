@@ -1,45 +1,33 @@
 package br.com.gabrielmorais.repository
 
-import br.com.gabrielmorais.data.desserts
 import br.com.gabrielmorais.models.Dessert
+import br.com.gabrielmorais.models.DessertsPage
+import br.com.gabrielmorais.models.PagingInfo
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import org.litote.kmongo.getCollection
 
-class DessertRepository : RepositoryInterface<Dessert> {
-  override fun getById(id: String): Dessert {
-    return try {
-      desserts.find { it.id == id } ?: throw Exception("no dessert with that ID exists")
-    } catch (e: Throwable) {
-      throw Exception("Cannot find dessert")
+class DessertRepository(client: MongoClient) : RepositoryInterface<Dessert> {
+  override lateinit var col: MongoCollection<Dessert>
+
+  init {
+    val database = client.getDatabase("test")
+    col = database.getCollection<Dessert>("Dessert")
+  }
+
+  fun getDessertsPage(page: Int, size: Int): DessertsPage {
+    try {
+      val skips = page * size
+      val res = col.find().skip(skips).limit(size)
+      val results = res.asIterable().map { it }
+      val totalDesserts = col.estimatedDocumentCount()
+      val totalPages = (totalDesserts / size) + 1
+      val next = if (results.isNotEmpty()) page + 1 else null
+      val prev = if (page > 0) page - 1 else null
+      val info = PagingInfo(totalDesserts.toInt(), totalPages.toInt(), next, prev)
+      return DessertsPage(results, info)
+    } catch (t: Throwable) {
+      throw Exception("Cannot get desserts page")
     }
-  }
-
-  override fun getAll(): List<Dessert> {
-    return desserts
-  }
-
-  override fun delete(id: String): Boolean {
-    return try {
-      val dessert = desserts.find { it.id == id } ?: throw Exception("No dessert with that ID exists")
-      desserts.remove(dessert)
-    } catch (e: Throwable) {
-      throw Exception("Cannot find dessert")
-    }
-  }
-
-  override fun update(entry: Dessert): Dessert {
-    return try {
-      val dessert = desserts.find { it.id == entry.id }?.apply {
-        name = entry.name
-        description = entry.description
-        imageUrl = entry.imageUrl
-      } ?: throw Exception("No dessert with that ID exists")
-      dessert
-    } catch (e: Throwable) {
-      throw Exception("Cannot find dessert")
-    }
-  }
-
-  override fun add(entry: Dessert): Dessert {
-    desserts.add(entry)
-    return entry
   }
 }
