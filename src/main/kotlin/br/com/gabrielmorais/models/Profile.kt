@@ -1,3 +1,3 @@
 package br.com.gabrielmorais.models
 
-data class Profile(val valuser: User, val desserts: List<Dessert> = emptyList())
+data class Profile(val user: User, val desserts: List<Dessert> = emptyList())

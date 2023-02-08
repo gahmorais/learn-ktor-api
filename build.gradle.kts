@@ -9,6 +9,7 @@ plugins {
   application
   kotlin("jvm") version "1.8.10"
   id("io.ktor.plugin") version "2.2.3"
+  id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 tasks {
@@ -17,6 +18,20 @@ tasks {
   }
   compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+  }
+}
+
+application{
+  mainClass.set("io.ktor.server.netty.EngineMain")
+}
+
+tasks.withType<Jar> {
+  manifest {
+    attributes(
+      mapOf(
+        "Main-Class" to application.mainClass
+      )
+    )
   }
 }
 

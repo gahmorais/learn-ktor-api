@@ -2,7 +2,9 @@ package br.com.gabrielmorais.graphql
 
 import br.com.gabrielmorais.models.Dessert
 import br.com.gabrielmorais.models.DessertInput
+import br.com.gabrielmorais.models.User
 import br.com.gabrielmorais.services.DessertService
+import com.apurebase.kgraphql.Context
 import com.apurebase.kgraphql.schema.dsl.SchemaBuilder
 
 fun SchemaBuilder.dessertSchema(dessertService: DessertService) {
@@ -37,9 +39,9 @@ fun SchemaBuilder.dessertSchema(dessertService: DessertService) {
 
   mutation("createDessert") {
     description = "Create a new dessert"
-    resolver { dessertInput: DessertInput ->
+    resolver { dessertInput: DessertInput, ctx: Context ->
       try {
-        val userId = "abc"
+        val userId = ctx.get<User>()?.id ?: error("not signed in")
         dessertService.createDessert(dessertInput, userId)
       } catch (e: Exception) {
         null
@@ -48,9 +50,9 @@ fun SchemaBuilder.dessertSchema(dessertService: DessertService) {
   }
 
   mutation("deleteDessert") {
-    resolver { dessertId: String ->
+    resolver { dessertId: String, ctx: Context ->
       try {
-        val userId = "abc"
+        val userId = ctx.get<User>()?.id ?: error("not signed in")
         dessertService.deleteDessert(userId, dessertId)
       } catch (e: Exception) {
         null
@@ -59,9 +61,9 @@ fun SchemaBuilder.dessertSchema(dessertService: DessertService) {
   }
 
   mutation("updateDessert") {
-    resolver { dessertId: String, dessertInput: DessertInput ->
+    resolver { dessertId: String, dessertInput: DessertInput, ctx: Context ->
       try {
-        val userId = "abc"
+        val userId = ctx.get<User>()?.id ?: error("not signed in")
         dessertService.updateDessert(userId, dessertId, dessertInput)
       } catch (e: Exception) {
         null
